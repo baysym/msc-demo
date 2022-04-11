@@ -26,11 +26,20 @@ namespace Ubiq.Samples
         // who am i
         public Text leftText;
         public Text rightText;
+        public TextAsset answerFile;
+        public List<string> answers;
 
         // find my brain
-        //
+        public Transform[] fmbPositions;
+        public GameObject leftBrain;
+        public GameObject rightBrain;
 
         // rock paper scissors
+        private string leftRPS = "012";
+        private string rightRPS = "012";
+        public GameObject[] rpsProps;
+        public Transform[] rpsLocations;
+        private float timer;
 
 
         void Start()
@@ -38,6 +47,15 @@ namespace Ubiq.Samples
             Id = new NetworkId(netId);
             netcon = NetworkScene.Register(this);
             rb = GetComponent<Rigidbody>();
+
+            answers = answerFile.text.Split('\n').ToList();
+            for (int i = 0; i < answers.Count; i++)
+            {
+                int rnd = Random.Range(0, answers.Count - 1);
+                string temp = answers[rnd];
+                answers[rnd] = answers[i];
+                answers[i] = temp;
+            }
         }
 
         public void OnSpawned(bool local) { owner = local; }
@@ -91,29 +109,46 @@ namespace Ubiq.Samples
                 netcon.SendJson(new Message(taskStatus));
             }
 
+            timer += Time.deltaTime;
+            if (timer > 5f)
+            {
+                for (int i = 0; i < 6; i++) {
+                    // show spheres for three seconds then show models until reset
+                    rpsProps[i].GetChild(0).SetActive(timer < 3f);
+                    rpsProps[i].GetChild(1).SetActive(timer > 3f);
+                }
+
+                ShuffleRPS();
+                timer = 0f;
+            }
+
             // apply to tasks
             leftText.text = taskStatus[0];
             rightText.text = taskStatus[1];
         }
 
-        // -------- who am i logic --------
+        // -------- who am i --------
 
         void LeftDescribes()
         {
-            taskStatus[0] = "describe " + Random.Range(0, 100).ToString();
+            taskStatus[0] = "describe " + answers[Random.Range(0, answers.length)];
             taskStatus[1] = "guess";
         }
 
         void RightDescribes()
         {
             taskStatus[0] = "guess";
-            taskStatus[1] = "describe " + Random.Range(0, 100).ToString();
+            taskStatus[1] = "describe " + answers[Random.Range(0, answers.length)];
         }
 
-        // -------- find my brain logic --------
+        // -------- find my brain --------
 
         void StartFMB()
         {
+            /*int pos = Random.Range(0, 2);
+            leftBrain.transform.position = fmbPositions[pos];
+            rightBrain.transform.position = fmbPositions[1 - pos];*/
+
             return;
         }
 
@@ -127,13 +162,33 @@ namespace Ubiq.Samples
         void ShuffleRPS()
         {
             string[] options = { "012", "021", "102", "120", "201", "210" };
-            taskStatus[2] = options[Random.Range(0, 6)] + options[Random.Range(0, 6)];
+            leftRPS = options[Random.Range(0, 6)];
+            rightRPS = options[Random.Range(0, 6)];
+            taskStatus[2] = leftRPS + rightRPS;
+            DisplayRPS();
             ArrangeRPS();
+        }
+
+        void DisplayRPS()
+        {
+            string order = "";
+            for (int i = 0; i < 6; i++)
+                order += "RPS"[taskStatus[2][i]];
+            Debug.Log(order);
+
+            leftText.text = order.Substring(0, 3);
+            rightText.text = order.Substring(3);
         }
 
         void ArrangeRPS()
         {
-
+            for (int i = 0; i < 6; i++)
+            {
+                if (i < 3)
+                    rpsProps[i].transform.position = rpsLocations[leftRPS[i]];
+                else
+                    rpsProps[i].transform.position = rpsLocations[rightRPS[i - 3]];
+            }
         }
     }
 }
