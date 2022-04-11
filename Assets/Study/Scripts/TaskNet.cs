@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Ubiq.Messaging;
 using Ubiq.XR;
 using UnityEngine;
@@ -18,14 +19,18 @@ namespace Ubiq.Samples
         public bool owner = false;
 
         // tasks
-        // 0: left text
-        // 1: right text
+        // 0: left wai text
+        // 1: right wai text
         // 2: rps order
-        public string[] taskStatus = { "", "", "" };
+        // 3: rps timer
+        // 4: 
+        public string[] taskStatus = { "", "", "", "", "" };
 
         // who am i
-        public Text leftText;
-        public Text rightText;
+        public Text leftWAIText;
+        public Text rightWAIText;
+        public Text leftTimer;
+        public Text rightTimer;
         public TextAsset answerFile;
         public List<string> answers;
 
@@ -35,6 +40,8 @@ namespace Ubiq.Samples
         public GameObject rightBrain;
 
         // rock paper scissors
+        public Text leftRPSText;
+        public Text rightRPSText;
         private string leftRPS = "012";
         private string rightRPS = "012";
         public GameObject[] rpsProps;
@@ -62,7 +69,7 @@ namespace Ubiq.Samples
 
         public void Grasp(Hand hand) { follow = hand; }
 
-        public void Release(Hand hand) { follow = null; }
+        public void Release(Hand hand) { return; }
 
         public struct Message
         {
@@ -87,6 +94,8 @@ namespace Ubiq.Samples
         {
             owner = (follow != null);
 
+            //owner = true;  // ######## demo only ########
+
             // function key input
             if (owner)
             {
@@ -106,39 +115,52 @@ namespace Ubiq.Samples
                 if (Input.GetKeyUp(KeyCode.F9))
                     ShuffleRPS();
 
-                netcon.SendJson(new Message(taskStatus));
-            }
+                timer += Time.deltaTime;
+                taskStatus[3] = timer.ToString();
 
-            timer += Time.deltaTime;
-            if (timer > 5f)
-            {
-                for (int i = 0; i < 6; i++) {
-                    // show spheres for three seconds then show models until reset
-                    rpsProps[i].GetChild(0).SetActive(timer < 3f);
-                    rpsProps[i].GetChild(1).SetActive(timer > 3f);
+                if (timer > 5f)
+                {
+                    ShuffleRPS();
+                    timer = 0f;
                 }
 
-                ShuffleRPS();
-                timer = 0f;
+                netcon.SendJson(new Message(taskStatus));
+            }
+            else
+            {
+                if (taskStatus[3] != "")
+                    timer = float.Parse(taskStatus[3]);
             }
 
-            // apply to tasks
-            leftText.text = taskStatus[0];
-            rightText.text = taskStatus[1];
+            for (int i = 0; i < 6; i++)
+            {
+                // show spheres for three seconds then show models until reset
+                rpsProps[i].transform.GetChild(0).gameObject.SetActive(timer < 3f);
+                rpsProps[i].transform.GetChild(1).gameObject.SetActive(timer > 3f);
+            }
+
+            leftWAIText.text = taskStatus[0];
+            rightWAIText.text = taskStatus[1];
+
+            if (taskStatus[2] != "")
+            {
+                DisplayRPS();
+                ArrangeRPS();
+            }
         }
 
         // -------- who am i --------
 
         void LeftDescribes()
         {
-            taskStatus[0] = "describe " + answers[Random.Range(0, answers.length)];
+            taskStatus[0] = "describe " + answers[Random.Range(0, answers.Count)];
             taskStatus[1] = "guess";
         }
 
         void RightDescribes()
         {
             taskStatus[0] = "guess";
-            taskStatus[1] = "describe " + answers[Random.Range(0, answers.length)];
+            taskStatus[1] = "describe " + answers[Random.Range(0, answers.Count)];
         }
 
         // -------- find my brain --------
@@ -165,29 +187,44 @@ namespace Ubiq.Samples
             leftRPS = options[Random.Range(0, 6)];
             rightRPS = options[Random.Range(0, 6)];
             taskStatus[2] = leftRPS + rightRPS;
-            DisplayRPS();
-            ArrangeRPS();
         }
 
         void DisplayRPS()
         {
-            string order = "";
+            /*string order = "";
             for (int i = 0; i < 6; i++)
-                order += "RPS"[taskStatus[2][i]];
-            Debug.Log(order);
+                order += "RPS"[int.Parse(taskStatus[2][i].ToString())];
 
-            leftText.text = order.Substring(0, 3);
-            rightText.text = order.Substring(3);
+            leftRPSText.text = order.Substring(0, 3);
+            rightRPSText.text = order.Substring(3);*/
+
+            leftRPSText.text = taskStatus[2].Substring(3);
+            rightRPSText.text = taskStatus[2].Substring(0, 3);
         }
 
         void ArrangeRPS()
         {
+            /*char[] rps = { 'R', 'P', 'S' };
+            string order = "";
+            for (int i = 0; i < 6; i++)
+                order += System.Array.IndexOf(rps, taskStatus[2][i]);
+
+            leftRPS = order.Substring(0, 3);
+            rightRPS = order.Substring(3);
+
             for (int i = 0; i < 6; i++)
             {
                 if (i < 3)
-                    rpsProps[i].transform.position = rpsLocations[leftRPS[i]];
+                    rpsProps[i].transform.position = rpsLocations[int.Parse(rightRPS[i].ToString())].position;
                 else
-                    rpsProps[i].transform.position = rpsLocations[rightRPS[i - 3]];
+                    rpsProps[i].transform.position = rpsLocations[int.Parse(leftRPS[i - 3].ToString()) + 3].position;
+            }*/
+
+            for (int i = 0; i < 3; i++)
+            {
+                string order = taskStatus[2];
+                rpsProps[i].transform.position = rpsLocations[int.Parse(order[i].ToString())].position;
+                rpsProps[i + 3].transform.position = rpsLocations[int.Parse(order[i + 3].ToString()) + 3].position;
             }
         }
     }
