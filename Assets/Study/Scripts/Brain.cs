@@ -25,9 +25,6 @@ namespace Ubiq.Samples
         float sampleSum = 0f;  // sum of all baseline values
         int sampleCount = 0;  // how many baseline values were sampled
 
-        Vector3 startPos;  // starting position
-        Quaternion startRot;  // starting rotation
-
         // visualisations
         public bool ood;
         public bool waves;
@@ -38,8 +35,8 @@ namespace Ubiq.Samples
 
         // set network ID to editor value
         public string netID;
-        //public NetworkId Id { get; set; }
-        public NetworkId Id { get; set; } = NetworkId.Unique();
+        public NetworkId Id { get; set; }
+        //public NetworkId Id { get; set; } = NetworkId.Unique();
         void Awake() { Id = new NetworkId(netID); }
 
 
@@ -65,6 +62,7 @@ namespace Ubiq.Samples
             owner = false;  // recieved data therefore this client is not the owner
             var msg = message.FromJson<Message>();            
             transform.localPosition = msg.transform.position;
+            transform.localRotation = msg.transform.rotation;
             material.color = msg.colour;
         }
 
@@ -73,7 +71,7 @@ namespace Ubiq.Samples
         // follow hand on grasp and stop on release
         public void Grasp(Hand controller) {
             follow = controller;
-            thisPlayer.GetComponent<GetData>().brain = this;
+            //thisPlayer.GetComponent<GetData>().brain = this;
             owner = true;
             sampleTimeElapsed = 0f;
         }
@@ -95,9 +93,6 @@ namespace Ubiq.Samples
             rend = GetComponent<Renderer>();
             material = GetComponent<Renderer>().material;
             thisPlayer = GameObject.Find("Player");
-
-            startPos = transform.position;
-            startRot = transform.rotation;
 
             psObj = transform.GetChild(0).gameObject;
             ps = psObj.GetComponent<ParticleSystem>();
@@ -221,27 +216,6 @@ namespace Ubiq.Samples
             {
                 Debug.Log("Parsing failed");
                 return new float[] { 0f };
-            }
-        }
-
-
-
-        // reset the brain
-        public void Reset()
-        {
-            follow = null;
-            owner = false;
-            this.transform.parent = null;
-            transform.position = startPos;
-            transform.rotation = startRot;
-            body.velocity = Vector3.zero;
-        }
-        // reset the brain on eraser trigger enter
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.gameObject.name == "Eraser")
-            {
-                Reset();
             }
         }
 

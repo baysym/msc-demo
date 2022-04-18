@@ -11,7 +11,7 @@ public class GetData : MonoBehaviour
 {
 	private TcpClient socketConnection;
 	private Thread clientReceiveThread;
-	public Brain brain;
+	public NewBrain brain;
     
 	// Use this for initialization 	
 	void Start()
@@ -54,7 +54,7 @@ public class GetData : MonoBehaviour
 						var incommingData = new byte[length];
 						Array.Copy(bytes, 0, incommingData, 0, length);
 						
-						// Convert byte array to string message. 						
+						// Convert byte array to string message.
 						string message = Encoding.ASCII.GetString(incommingData);
 
 						// Send the data to the brain

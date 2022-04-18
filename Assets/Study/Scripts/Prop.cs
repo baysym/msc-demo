@@ -12,16 +12,14 @@ namespace Ubiq.Samples
         private NetworkContext ctx;
         bool owner = false;
         private Rigidbody body;
+        public bool isBrain = false;
 
 
 
         // set network ID to editor value
         public string netID;
         public NetworkId Id { get; set; }
-        void Awake()
-        {
-            Id = new NetworkId(Random.Range(0, 9999).ToString());
-        }
+        void Awake() { Id = new NetworkId(netID); }
 
 
 
@@ -41,6 +39,7 @@ namespace Ubiq.Samples
         {
             follow = controller;
             owner = true;
+            GetComponent<NewBrain>().Grasp(controller);
         }
         public void Release(Hand controller)
         {
@@ -52,11 +51,6 @@ namespace Ubiq.Samples
         // initial set up
         void Start()
         {
-            // generate network id
-            netID = "rps-";
-            netID += gameObject.name.Substring(0, 1).ToLower();
-            netID += transform.parent.position.z < 0 ? "1" : "2";
-
             ctx = NetworkScene.Register(this);
             body = GetComponent<Rigidbody>();
         }
