@@ -8,11 +8,15 @@ using Ubiq.Samples;
 public class NewBrain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspable
 {
     // networking
-    [Header("Ubiq")]
     private NetworkContext netcon;
-    public string netId;
+    public NetworkId Id { get; set; } = NetworkId.Unique();
+    /*public string netID;
     public NetworkId Id { get; set; }
-    void Awake() { Id = new NetworkId(netId); }
+    void Awake() { Id = new NetworkId(netID); }*/
+
+    // movement
+    private Hand follow;
+    bool owner = false;
 
     // prerequisites
     GameObject thisPlayer;
@@ -20,6 +24,7 @@ public class NewBrain : MonoBehaviour, INetworkObject, INetworkComponent, IGrasp
     Material mat;
 
     // data processing
+    [Header("Data")]
     public string dataString;
     float mean;
     float sampleTime = 0f;
@@ -30,6 +35,7 @@ public class NewBrain : MonoBehaviour, INetworkObject, INetworkComponent, IGrasp
     public float value = 0f;
 
     // visualisations
+    [Header("Visualisations")]
     public bool isOod;
     public bool isParticles;
 
@@ -39,36 +45,64 @@ public class NewBrain : MonoBehaviour, INetworkObject, INetworkComponent, IGrasp
         netcon = NetworkScene.Register(this);
         rend = GetComponent<Renderer>();
         thisPlayer = GameObject.Find("Player");
+
+        int brainCount = GameObject.FindGameObjectsWithTag("Brain").Length;
+        if (brainCount == 1)
+            transform.position = new Vector3(-0.25f, 0.6f, 1f);
+        else
+            transform.position = new Vector3(0.25f, 0.6f, 1f);
     }
 
     // 
     void FixedUpdate()
     {
-        netcon.SendJson(new Message(rend.material.color));
+        if (owner)
+        {
+            if (dataString != "")
+                ProcessData();
 
-        if (dataString != "")
-            ProcessData();
+            if (follow != null)
+            {
+                transform.position = follow.transform.position;
+                transform.rotation = follow.transform.rotation;
+            }
+
+            netcon.SendJson(new Message(rend.material.color, transform));
+        }
     }
 
     // hand interactions
     public void Grasp(Hand controller)
     {
+        owner = true;
+        follow = controller;
         thisPlayer.GetComponent<GetData>().brain = this;
     }
-    public void Release(Hand controller) { return; }
+    public void Release(Hand controller)
+    {
+        follow = null;
+    }
 
-    // send network updates
+    // network updates
     public struct Message
     {
-        public Color color;
-        public Message(Color color) { this.color = color; }
+        public Color c;
+        public Transform t;
+        
+        public Message(Color c, Transform t) {
+            this.c = c;
+            this.t = t;
+        }
     }
 
     // receive network updates
     public void ProcessMessage(ReferenceCountedSceneGraphMessage message)
     {
         Message msg = message.FromJson<Message>();
-        rend.material.color = msg.color;
+        rend.material.color = msg.c;
+        transform.position = msg.t.position;
+        transform.rotation = msg.t.rotation;
+        Debug.Log(msg.t.position);
     }
 
     // 

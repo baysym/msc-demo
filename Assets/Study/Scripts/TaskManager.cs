@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Ubiq.Messaging;
 using Ubiq.XR;
+using Ubiq.Samples;
 
 public class TaskManager : MonoBehaviour, INetworkObject, INetworkComponent
 {
@@ -45,54 +46,63 @@ public class TaskManager : MonoBehaviour, INetworkObject, INetworkComponent
 
     // brains
     [Header("Brains")]
+    public GameObject brainPrefab;
     public GameObject leftBrain;
     public GameObject rightBrain;
-    
+
     // testing
     [Header("DEBUG")]
     public bool editor = false;
 
 
-    void Awake() { Id = new NetworkId(netID); }
-
-    void Start() { netcon = NetworkScene.Register(this); }
+    void Start() {
+        netcon = NetworkScene.Register(this);
+    }
     
     void Update()
     {
-        /*
-         * if editor is for debug only
-         */
-        if (editor)
+        if (Input.GetKeyUp(KeyCode.Space))
         {
-            // change visualisations
-            if (Input.GetKeyUp(KeyCode.Alpha1))
+            int brainCount = GameObject.FindGameObjectsWithTag("Brain").Length;
+
+            if (brainCount < 2)
             {
-                leftBrain.GetComponent<NewBrain>().isOod = true;
-                rightBrain.GetComponent<NewBrain>().isOod = true;
-                leftBrain.GetComponent<NewBrain>().isParticles = false;
-                rightBrain.GetComponent<NewBrain>().isParticles = false;
+                NetworkSpawner.SpawnPersistent(this, brainPrefab);
             }
-            if (Input.GetKeyUp(KeyCode.Alpha2))
+            else
             {
-                leftBrain.GetComponent<NewBrain>().isOod = false;
-                rightBrain.GetComponent<NewBrain>().isOod = false;
-                leftBrain.GetComponent<NewBrain>().isParticles = true;
-                rightBrain.GetComponent<NewBrain>().isParticles = true;
+                leftBrain = GameObject.FindGameObjectsWithTag("Brain")[0];
+                rightBrain = GameObject.FindGameObjectsWithTag("Brain")[1];
             }
-
-
-            // conversation
-            if (Input.GetKeyUp(KeyCode.F1))
-                GenConvoTopic();
-
-            // rock paper scissors
-            if (Input.GetKeyUp(KeyCode.F9))
-                GenRPSOrder();
-            if (Input.GetKeyUp(KeyCode.F10))
-                GenRPSVisibility("prop");
-            if (Input.GetKeyUp(KeyCode.F11))
-                GenRPSVisibility("sphere");
         }
+
+        // change visualisations
+        if (Input.GetKeyUp(KeyCode.Alpha1))
+        {
+            leftBrain.GetComponent<NewBrain>().isOod = true;
+            rightBrain.GetComponent<NewBrain>().isOod = true;
+            leftBrain.GetComponent<NewBrain>().isParticles = false;
+            rightBrain.GetComponent<NewBrain>().isParticles = false;
+        }
+        if (Input.GetKeyUp(KeyCode.Alpha2))
+        {
+            leftBrain.GetComponent<NewBrain>().isOod = false;
+            rightBrain.GetComponent<NewBrain>().isOod = false;
+            leftBrain.GetComponent<NewBrain>().isParticles = true;
+            rightBrain.GetComponent<NewBrain>().isParticles = true;
+        }
+
+        // conversation
+        if (Input.GetKeyUp(KeyCode.F1))
+            GenConvoTopic();
+
+        // rock paper scissors
+        if (Input.GetKeyUp(KeyCode.F9))
+            GenRPSOrder();
+        if (Input.GetKeyUp(KeyCode.F10))
+            GenRPSVisibility("prop");
+        if (Input.GetKeyUp(KeyCode.F11))
+            GenRPSVisibility("sphere");
 
         // send and execute the method with its argument
         if (send)

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using UnityEngine;
 using Ubiq.Samples;
+using Ubiq.Messaging;
 
 public class GetData : MonoBehaviour
 {
