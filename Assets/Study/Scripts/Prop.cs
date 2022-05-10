@@ -14,8 +14,9 @@ namespace Ubiq.Samples
 
         // set network ID to editor value
         public string netID;
-        public NetworkId Id { get; set; }
-        void Awake() { Id = new NetworkId(netID); }
+        /*public NetworkId Id { get; set; }
+        void Awake() { Id = new NetworkId(netID); }*/
+        public NetworkId Id { get; set; } = NetworkId.Unique();
 
         // receive messages and update location and colour
         public void ProcessMessage(ReferenceCountedSceneGraphMessage message)
