@@ -95,6 +95,9 @@ public class TaskManager : MonoBehaviour, INetworkObject, INetworkComponent
         // conversation
         if (Input.GetKeyUp(KeyCode.F1))
             GenConvoTopic();
+        if (Input.GetKeyUp(KeyCode.F2
+            ))
+            GenConvoTopic();
 
         // rock paper scissors
         if (Input.GetKeyUp(KeyCode.F9))

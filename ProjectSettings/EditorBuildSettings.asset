@@ -17,10 +17,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Samples/Intro/Scenes/Apartment.unity
     guid: 64bff52f73c71a844825016cf8111b18
-  - enabled: 0
+  - enabled: 1
     path: Assets/Study/Demo.unity
     guid: f49f506ef40f8704bb6aca5f7f32eac4
-  - enabled: 1
+  - enabled: 0
     path: Assets/Study/Mirror.unity
     guid: 5ccf947c02321e44293418e2fdb8857e
   m_configObjects:
