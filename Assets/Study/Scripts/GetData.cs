@@ -12,7 +12,7 @@ public class GetData : MonoBehaviour
 {
 	private TcpClient socketConnection;
 	private Thread clientReceiveThread;
-	public NewBrain brain;
+	public Brain brain;
     
 	// Use this for initialization 	
 	void Start()

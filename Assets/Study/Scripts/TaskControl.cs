@@ -66,17 +66,13 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
         // change visualisations
         if (Input.GetKeyUp(KeyCode.Alpha1))
         {
-            leftBrain.GetComponent<NewBrain>().isOod = true;
-            rightBrain.GetComponent<NewBrain>().isOod = true;
-            leftBrain.GetComponent<NewBrain>().isParticles = false;
-            rightBrain.GetComponent<NewBrain>().isParticles = false;
+            leftBrain.GetComponent<Brain>().isOod = true;
+            rightBrain.GetComponent<Brain>().isOod = true;
         }
         if (Input.GetKeyUp(KeyCode.Alpha2))
         {
-            leftBrain.GetComponent<NewBrain>().isOod = false;
-            rightBrain.GetComponent<NewBrain>().isOod = false;
-            leftBrain.GetComponent<NewBrain>().isParticles = true;
-            rightBrain.GetComponent<NewBrain>().isParticles = true;
+            leftBrain.GetComponent<Brain>().isOod = false;
+            rightBrain.GetComponent<Brain>().isOod = false;
         }
 
         // cyan
