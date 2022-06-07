@@ -9519,7 +9519,7 @@ GameObject:
   - component: {fileID: 8117431361896020277}
   - component: {fileID: 8117431361896020276}
   - component: {fileID: 8117431361896020281}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Brain
   m_TagString: Brain
   m_Icon: {fileID: 0}
@@ -9618,3 +9618,4 @@ MonoBehaviour:
   dataString: 
   activity: 0
   isOod: 0
+  onTable: 0

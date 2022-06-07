@@ -15,15 +15,10 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
     public NetworkId Id { get; set; }
     private NetworkContext netcon;
 
-    // control activity
-    /*[Header("Magenta table")]
-    [Space(20)]*/
-
     // brains
     [Header("Brains")]
     public GameObject brainPrefab;
-    public GameObject leftBrain;
-    public GameObject rightBrain;
+    public GameObject[] brains;
 
     // table controllers
     private CyanControl cyan;
@@ -33,66 +28,63 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
     // cyan table
     private int animal;
 
+    // magenta table
+    public Transform[] tablePositions;
+    public bool brainsOnTable;
+
     // yellow table
     private string order;
 
     //
     void Start()
     {
-        Id = new NetworkId(netID);
         netcon = NetworkScene.Register(this);
         cyan = GameObject.Find("Cyan table").GetComponent<CyanControl>();
         magenta = GameObject.Find("Magenta table").GetComponent<MagentaControl>();
         yellow = GameObject.Find("Yellow table").GetComponent<YellowControl>();
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            int brainCount = GameObject.FindGameObjectsWithTag("Brain").Length;
-
-            if (brainCount < 2)
-            {
-                NetworkSpawner.SpawnPersistent(this, brainPrefab);
-            }
-            else
-            {
-                leftBrain = GameObject.FindGameObjectsWithTag("Brain")[0];
-                rightBrain = GameObject.FindGameObjectsWithTag("Brain")[1];
-            }
-        }
-
-        // change visualisations
-        if (Input.GetKeyUp(KeyCode.Alpha1))
-        {
-            leftBrain.GetComponent<Brain>().isOod = true;
-            rightBrain.GetComponent<Brain>().isOod = true;
-        }
-        if (Input.GetKeyUp(KeyCode.Alpha2))
-        {
-            leftBrain.GetComponent<Brain>().isOod = false;
-            rightBrain.GetComponent<Brain>().isOod = false;
-        }
-
-        // cyan
-        // new left text
-        if (Input.GetKeyUp(KeyCode.F1))
-            SetText(true);
-        // new right text
-        if (Input.GetKeyUp(KeyCode.F2))
-            SetText(false);
-
-        // magenta
-        //
-
-        // yellow
-        // new round of rock paper scissors
-        if (Input.GetKeyUp(KeyCode.F9))
-            NewRound();
+        brains = GameObject.FindGameObjectsWithTag("Brain");
     }
 
     //
+    void Update()
+    {
+        // SPACE - spawn brains
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            brains = GameObject.FindGameObjectsWithTag("Brain");
+            int brainCount = brains.Length;
+
+            if (brainCount < 2)
+                NetworkSpawner.SpawnPersistent(this, brainPrefab);
+        }
+
+        // 1 - all brains to ood
+        if (Input.GetKeyUp(KeyCode.Alpha1))
+            foreach (GameObject brain in brains)
+                brain.GetComponent<Brain>().isOod = true;
+        // 2 - all brains to particles
+        if (Input.GetKeyUp(KeyCode.Alpha2))
+            foreach (GameObject brain in brains)
+                brain.GetComponent<Brain>().isOod = false;
+
+        // F1 - new left text
+        if (Input.GetKeyUp(KeyCode.F1))
+            SetText(true);
+        // F2 - new right text
+        if (Input.GetKeyUp(KeyCode.F2))
+            SetText(false);
+
+        // F5 - lock ood brains to table positions
+        if (Input.GetKeyUp(KeyCode.F5))
+            BrainTable(true);
+        // F6 - unlock brain positions
+        if (Input.GetKeyUp(KeyCode.F6))
+            BrainTable(false);
+
+        // F9 - new round of rock paper scissors
+        if (Input.GetKeyUp(KeyCode.F9))
+            NewRound();
+    }
 
     // cyan
     void SetText(bool showLeft, string input = "")
@@ -101,14 +93,18 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
         cyan.SetText(showLeft, animal);
 
         if (input == "")
-        {
             SendMessage(1, showLeft, animal.ToString());
-            Debug.Log("SetText sent a message");
-        }
     }
 
     // magenta
-    //
+    void BrainTable(bool status, string input = "")
+    {
+        foreach (GameObject brain in brains)
+            brain.GetComponent<Brain>().onTable = status;
+
+        if (input == "")
+            SendMessage(2, status, "x");
+    }
 
     // yellow
     void NewRound(string input = "")
@@ -137,10 +133,7 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
         yellow.NewRound(order);
 
         if (input == "")
-        {
             SendMessage(3, false, order);
-            Debug.Log("NewRound sent a message");
-        }
     }
 
     //
@@ -180,6 +173,7 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
                 break;
 
             case 2:
+                BrainTable(argBool);
                 break;
 
             case 3:

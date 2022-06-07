@@ -1,20 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using Ubiq.Messaging;
 using Ubiq.XR;
+using UnityEngine;
 using Ubiq.Samples;
 
-public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspable
+public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnable, IGraspable
 {
-    // networking
-    private NetworkContext netcon;
+    // ubiq
+    private Hand follow;
+    private NetworkContext ctx;
+    bool owner = false;
+
+    // set network ID to editor value
     public string netID;
     public NetworkId Id { get; set; }
     void Awake() { Id = new NetworkId(netID); }
-
-    // movement
-    private Hand follow;
 
     // prerequisites
     GameObject thisPlayer;
@@ -35,20 +36,24 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
     // visualisations
     [Header("Visualisations")]
     public bool isOod;
+    public bool isDummy;
+    public bool onTable;
     private ParticleSystem realParticles;
     private ParticleSystem fakeParticles;
     private Transform head;
-    bool owner = false;
+    float xPos;
 
     // 
     void Start()
     {
-        netcon = NetworkScene.Register(this);
+        ctx = NetworkScene.Register(this);
         rend = GetComponent<Renderer>();
         thisPlayer = GameObject.Find("Player");
 
         realParticles = transform.GetChild(0).GetComponent<ParticleSystem>();
         fakeParticles = transform.GetChild(1).GetComponent<ParticleSystem>();
+
+        xPos = Random.Range(0f, 99999f);
     }
 
     // 
@@ -58,13 +63,34 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
         rpe.rateOverTime = 0f;
 
         var fpe = fakeParticles.emission;
-        float perlin = Mathf.PerlinNoise(0f, Time.time / 2f) * 10f;
-        fpe.rateOverTime = isOod ? 0f : perlin;
+        float perlin = Mathf.PerlinNoise(xPos, Time.time / 2f);
+        fpe.rateOverTime = isOod ? 0f : perlin * 10f;
 
-        if (follow != null)
+        if (owner)
         {
-            ProcessData();
-            netcon.SendJson(new Message(activity, transform));
+            if (follow != null)
+                ProcessData();
+
+            ctx.SendJson(new Message(activity, transform));
+        }
+
+        GameObject[] brains = GameObject.FindGameObjectsWithTag("Brain");
+        GameObject[] tableTransforms = GameObject.FindGameObjectsWithTag("onTable");
+        if (onTable)
+            for (int i = 0; i < 2; i++)
+                brains[i].transform.position = tableTransforms[i].transform.position;
+
+        if (isDummy)
+        {
+            if (isOod)
+            {
+                rend.material.color = new Color(perlin, perlin, perlin);
+                rend.material.SetColor("_EmissionColor", new Color(perlin, perlin, perlin));
+            }
+            else
+            {
+                rpe.rateOverTime = 10f - (perlin * 10f);
+            }
         }
     }
 
@@ -89,7 +115,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
     {
         public float a;
         public Transform t;
-        
+
         public Message(float a, Transform t)
         {
             this.a = a;
@@ -101,7 +127,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
     public void ProcessMessage(ReferenceCountedSceneGraphMessage message)
     {
         owner = false;
-        Message msg = message.FromJson<Message>();
+        var msg = message.FromJson<Message>();
         activity = msg.a;
         rend.material.color = new Color(msg.a, msg.a, msg.a);
         transform.position = msg.t.position;
@@ -134,7 +160,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
         else
         {
             activity = 0f;
-        }        
+        }
 
         if (isOod) Ood();
         else Particles();
@@ -144,7 +170,6 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
     void Ood()
     {
         rend.enabled = true;
-
         rend.material.color = new Color(activity, activity, activity);
         rend.material.SetColor("_EmissionColor", new Color(activity, activity, activity));
 
@@ -164,5 +189,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, IGraspabl
         transform.position = head.position;
         transform.rotation = head.rotation;
     }
-}
 
+    // if spawned by a client, that client is the owner
+    public void OnSpawned(bool local) { owner = local; }
+}
