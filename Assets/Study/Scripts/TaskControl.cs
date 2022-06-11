@@ -48,24 +48,12 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
     //
     void Update()
     {
-        // SPACE - spawn brains
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            brains = GameObject.FindGameObjectsWithTag("Brain");
-            int brainCount = brains.Length;
-
-            if (brainCount < 2)
-                NetworkSpawner.SpawnPersistent(this, brainPrefab);
-        }
-
         // 1 - all brains to ood
         if (Input.GetKeyUp(KeyCode.Alpha1))
-            foreach (GameObject brain in brains)
-                brain.GetComponent<Brain>().isOod = true;
+            IsOod(true);
         // 2 - all brains to particles
         if (Input.GetKeyUp(KeyCode.Alpha2))
-            foreach (GameObject brain in brains)
-                brain.GetComponent<Brain>().isOod = false;
+            IsOod(false);
 
         // F1 - new left text
         if (Input.GetKeyUp(KeyCode.F1))
@@ -76,14 +64,21 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
 
         // F5 - lock ood brains to table positions
         if (Input.GetKeyUp(KeyCode.F5))
-            BrainTable(true);
+            OnTable(true);
         // F6 - unlock brain positions
         if (Input.GetKeyUp(KeyCode.F6))
-            BrainTable(false);
+            OnTable(false);
 
         // F9 - new round of rock paper scissors
         if (Input.GetKeyUp(KeyCode.F9))
             NewRound();
+    }
+
+    // set ood
+    void IsOod(bool status)
+    {
+        foreach (GameObject brain in brains)
+            brain.GetComponent<Brain>().isOod = status;
     }
 
     // cyan
@@ -97,7 +92,7 @@ public class TaskControl : MonoBehaviour, INetworkObject, INetworkComponent
     }
 
     // magenta
-    void BrainTable(bool status, string input = "")
+    void OnTable(bool status, string input = "")
     {
         foreach (GameObject brain in brains)
             brain.GetComponent<Brain>().onTable = status;

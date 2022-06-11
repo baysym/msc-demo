@@ -20,6 +20,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
     // prerequisites
     GameObject thisPlayer;
     Renderer rend;
+    Renderer rend2;
     Material mat;
 
     // data processing
@@ -48,6 +49,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
     {
         ctx = NetworkScene.Register(this);
         rend = GetComponent<Renderer>();
+        rend2 = GameObject.Find("Fake ood").GetComponent<Renderer>();
         thisPlayer = GameObject.Find("Player");
 
         realParticles = transform.GetChild(0).GetComponent<ParticleSystem>();
@@ -86,6 +88,9 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
             {
                 rend.material.color = new Color(perlin, perlin, perlin);
                 rend.material.SetColor("_EmissionColor", new Color(perlin, perlin, perlin));
+
+                rend2.material.color = new Color(1f - perlin, 1f - perlin, 1f - perlin);
+                rend2.material.SetColor("_EmissionColor", new Color(1f - perlin, 1f - perlin, 1f - perlin));
             }
             else
             {
@@ -144,7 +149,12 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
 
             mean = 0f;
             for (int i = 1; i < floatValues.Length; i++)
-                mean += float.Parse(stringValues[i].Replace(",", "")) / 16f;
+            {
+                //mean += float.Parse(stringValues[i].Replace(",", "")) / 16f;
+                
+                if (i % 2 == 0)
+                    mean += float.Parse(stringValues[i].Replace(",", "")) / 8f;
+            }
 
             if (sampleTime < samplePeriod)
             {
@@ -162,6 +172,9 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
             activity = 0f;
         }
 
+        //activity -= 0.5f;
+        //activity *= 50f;
+
         if (isOod) Ood();
         else Particles();
     }
@@ -172,6 +185,10 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
         rend.enabled = true;
         rend.material.color = new Color(activity, activity, activity);
         rend.material.SetColor("_EmissionColor", new Color(activity, activity, activity));
+        
+        rend2.enabled = true;
+        rend2.material.color = new Color(1f - activity, 1f - activity, 1f - activity);
+        rend2.material.SetColor("_EmissionColor", new Color(1f - activity, 1f - activity, 1f - activity));
 
         transform.position = follow.transform.position;
         transform.rotation = follow.transform.rotation;
@@ -181,6 +198,7 @@ public class Brain : MonoBehaviour, INetworkObject, INetworkComponent, ISpawnabl
     void Particles()
     {
         rend.enabled = false;
+        rend2.enabled = false;
 
         var rpe = realParticles.emission;
         rpe.rateOverTime = activity * 10f;
